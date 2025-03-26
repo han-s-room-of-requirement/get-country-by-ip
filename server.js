@@ -1,22 +1,19 @@
-const cluster = require("cluster")
-const os = require("os")
+// const cluster = require("cluster")
+// const os = require("os")
 
-if (cluster.isMaster) {
-  // Initialize and schedule database updates
+// if (cluster.isMaster) {
+//   for (let i = 0; i < os.cpus().length; i++) {
+//     cluster.fork()
+//   }
 
-  // Fork workers
-  for (let i = 0; i < os.cpus().length; i++) {
-    cluster.fork()
-  }
+//   cluster.on("exit", (worker, code, signal) => {
+//     console.log(`Worker ${worker.process.pid} died`)
+//   })
+// } else {
+// }
+const app = require("./app")
 
-  cluster.on("exit", (worker, code, signal) => {
-    console.log(`Worker ${worker.process.pid} died`)
-  })
-} else {
-  const app = require("./app")
-
-  const port = process.env.PORT || 3000
-  app.listen(port, () => {
-    console.log(`Worker ${cluster.worker.id} listening on port ${port}`)
-  })
-}
+const port = process.env.PORT || 3000
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Listening on port ${port}`)
+})

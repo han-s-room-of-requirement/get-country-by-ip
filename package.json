@@ -10,7 +10,7 @@
     "url": "https://github.com/lineofflight/country"
   },
   "scripts": {
-    "start": "node server.js",
+    "start": "node --watch-path ./ server.js",
     "test": "eslint . && jest --detectOpenHandles"
   },
   "dependencies": {

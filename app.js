@@ -39,32 +39,42 @@ app.use((req, res, next) => {
 
 app.use(express.static("public"))
 
-app.get("/:ip?", (req, res) => {
-  let country
-  const ip = req.params.ip || req.ip
+function handler(req, res) {
+  {
+    let country
+    const ip =
+      req.params.ip ||
+      req.headers["x-forwarded-for"] ||
+      req.socket.remoteAddress ||
+      req.ip
 
-  if (req.params.ip) {
-    if (!maxmind.validate(ip)) {
-      return res
-        .status(422)
-        .json({ error: { code: 422, message: "Unprocessable Entity" } })
+    if (req.params.ip) {
+      if (!maxmind.validate(ip)) {
+        return res
+          .status(422)
+          .json({ error: { code: 422, message: "Unprocessable Entity" } })
+      }
+    } else {
+      if (req.headers["cf-ipcountry"] && req.headers["cf-ipcountry"] != "XX") {
+        country = req.headers["cf-ipcountry"]
+      }
     }
-  } else {
-    if (req.headers["cf-ipcountry"] && req.headers["cf-ipcountry"] != "XX") {
-      country = req.headers["cf-ipcountry"]
+
+    if (!country) {
+      country = findCountry(ip)
+    }
+
+    if (country) {
+      res.json({ ip: ip, country: country })
+    } else {
+      res.status(404).json({ error: { code: 404, message: "Not Found" } })
     }
   }
+}
 
-  if (!country) {
-    country = findCountry(ip)
-  }
+app.get("/ip/:ip?", handler)
 
-  if (country) {
-    res.json({ ip: ip, country: country })
-  } else {
-    res.status(404).json({ error: { code: 404, message: "Not Found" } })
-  }
-})
+app.get("/test", handler)
 
 app.get("*", function (req, res) {
   return res
